@@ -2909,6 +2909,40 @@ class GanttApi {
 	constructor() {
 		this.listeners = [];
 		this.listenersMap = {};
+
+		this.initTaskLifeCycle();       
+	}
+
+    initTaskLifeCycle() {
+        const task = this.task;
+        const lifeCycle = {
+            data: null,
+            listener:null,
+            subscribe: function (callback) {
+                this.listener = callback;
+                return this;
+            },
+            emit: function (data) {
+                this.data = data
+                if(this.listener) {
+                    this.listener(this.data);
+                }
+            },
+            unsubscribe: function () {
+                this.listener = null;
+            },
+            getData: function () {
+                return this.data;
+            }
+        };
+        this.task = {
+            ...task,
+            lifeCycle: {
+                didMount: { ...lifeCycle },
+                unMount: { ...lifeCycle }
+            }
+        };
+        StelteGanttScopeHolder.taskLifeCycle = this.task.lifeCycle;
 	}
 	registerEvent(featureName, eventName) {
 		if (!this[featureName]) {
@@ -3401,6 +3435,11 @@ function create_each_block_1(key_1, ctx) {
 			insert(target, first, anchor);
 			mount_component(task, target, anchor);
 			current = true;
+
+			const dataTaskId = task.$$.ctx[0].id;
+			const emitData = { dataTaskId, task };
+			StelteGanttScopeHolder.taskLifeCycle.didMount.emit(emitData);
+
 		},
 		p(ctx, dirty) {
 			const task_changes = (dirty[0] & /*visibleTasks*/ 262144)
@@ -3426,6 +3465,11 @@ function create_each_block_1(key_1, ctx) {
 			current = false;
 		},
 		d(detaching) {
+
+			const dataTaskId = task.$$.ctx[0].id;
+			const emitData = { dataTaskId, task };
+			StelteGanttScopeHolder.taskLifeCycle.unMount.emit(emitData);
+
 			if (detaching) detach(first);
 			destroy_component(task, detaching);
 		}
@@ -6983,6 +7027,9 @@ class SvelteGanttExternal {
 	}
 }
 
+var StelteGanttScopeHolder = {/*
+    taskLifeCycle - Use for custom or listening the task life cycle event (ref: Gantt.api.task.lifeCycle)
+*/};
 // import { SvelteGanttTableComponent } from './modules/table';
 var SvelteGantt = Gantt;
 
