@@ -1,14 +1,14 @@
 {
-  "name": "svelte-gantt-event-custom",
+  "name": "ng-gantt-chart-custom",
   "description": "Interactive JavaScript Gantt chart/resource booking component",
-  "version": "1.3.4",
+  "version": "1.0.0",
   "author": "trongld232@gmail.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/thangnaozay/svelte-gantt-custom.git"
+    "url": "https://github.com/trongld230289/ng-gantt-chart-custom.git"
   },
   "bugs": {
-    "url": "https://github.com/thangnaozay/svelte-gantt-custom.git/issues"
+    "url": "https://github.com/trongld230289/ng-gantt-chart-custom.git/issues"
   },
   "keywords": [
     "svelte",
