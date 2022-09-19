@@ -1,0 +1,30 @@
+{
+  "name": "svelte-gantt-event-custom",
+  "description": "Interactive JavaScript Gantt chart/resource booking component",
+  "version": "1.3.4",
+  "author": "trongld232@gmail.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thangnaozay/svelte-gantt-custom.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thangnaozay/svelte-gantt-custom.git/issues"
+  },
+  "keywords": [
+    "svelte",
+    "gantt",
+    "booking",
+    "svelte-gantt",
+    "js-gantt",
+    "javascript-gantt",
+    "react-gantt",
+    "angular-gantt",
+    "vue-gantt",
+    "drag-n-drop"
+  ],
+  "types": "types/index.d.ts",
+  "main": "index.js",
+  "dependencies": {
+    "moment": "^2.22.2"
+  }
+}
