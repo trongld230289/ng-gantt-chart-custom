@@ -6430,18 +6430,18 @@ function instance$b($$self, $$props, $$invalidate) {
 		updateYPositions(row);
 	}
 
-	async function updateYPositions(row) {
+	function updateYPositions(row) {
 		const rowHeight = row.height;
-		let y = 0; //row.y;
+		let y = row.y;
 
 		const index = $rowStore.ids.findIndex(w => w === row.model.id);
-		const limitRowIds = $rowStore.ids; //.slice(index, index + 1)
+		const limitRowIds = $rowStore.ids.slice(index, index + 50)
 
 		limitRowIds.forEach(id => {
 			const row = $rowStore.entities[id];
 
 			if (!row.hidden) {
-				set_store_value_async(rowStore, $rowStore.entities[id].y = y, $rowStore);
+				set_store_value(rowStore, $rowStore.entities[id].y = y, $rowStore);
 				y += rowHeight;
 			}
 		});
@@ -6449,9 +6449,9 @@ function instance$b($$self, $$props, $$invalidate) {
 		$taskStore.ids.forEach(id => {
 			const task = $taskStore.entities[id];
 			const row = $rowStore.entities[task.model.resourceId];
-			//if (limitRowIds.indexOf(row.model.id) > - 1) {
-				set_store_value_async(taskStore, $taskStore.entities[id].top = row.y + $rowPadding, $taskStore);
-			//}
+			if (limitRowIds.indexOf(row.model.id) > - 1) {
+				set_store_value(taskStore, $taskStore.entities[id].top = row.y + $rowPadding, $taskStore);
+			}
 		});
 	}
 
