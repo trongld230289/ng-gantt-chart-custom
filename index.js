@@ -1407,6 +1407,7 @@ function create_fragment(ctx) {
 
 			if (dirty[0] & /*_position*/ 64) {
 				set_style(div1, "transform", "translate(" + /*_position*/ ctx[6].x + "px, " + /*_position*/ ctx[6].y + "px)");
+				updateTasksPosition(ctx);
 			}
 
 			if (dirty[0] & /*model, _dragging, _resizing*/ 49) {
@@ -1728,6 +1729,15 @@ function create_fragment$1(ctx) {
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
+			
+			if (!StelteGanttScopeHolder.displayedTaskRows) {
+
+				StelteGanttScopeHolder.displayedTaskRows = [ctx];
+			} else {
+
+				StelteGanttScopeHolder.displayedTaskRows.push(ctx);
+			}
+
 			if (if_block) if_block.m(div, null);
 			/*div_binding*/ ctx[8](div);
 		},
@@ -1771,6 +1781,10 @@ function create_fragment$1(ctx) {
 			if (detaching) detach(div);
 			if (if_block) if_block.d();
 			/*div_binding*/ ctx[8](null);
+			if (StelteGanttScopeHolder.displayedTasks) {
+				StelteGanttScopeHolder.displayedTaskRows = 
+					StelteGanttScopeHolder.displayedTaskRows.filter(row => row[0].model.id !== ctx[0].model.id);
+			}
 		}
 	};
 }
@@ -3401,6 +3415,32 @@ function create_each_block_2(key_1, ctx) {
 	};
 }
 
+function updateTasksPosition(ctx) {
+	const displayedTaskRows = StelteGanttScopeHolder.displayedTaskRows.map(i =>{ const {y, model, children} = i[0]; return {y, ...model, children}});
+	const displayedTaskRowIds = displayedTaskRows.map(i => i.id)
+	const displayedTasks = StelteGanttScopeHolder.displayedTasks
+		.map(i => i.task.$$.ctx[0])
+		.filter(i => displayedTaskRowIds.find(id => id === i.resourceId))
+		.map(i => {
+			const taskRowByTask = displayedTaskRows.find(tr => tr.id === i.resourceId);
+			const {y} = taskRowByTask;
+			return {
+				y,
+				...i,
+			}
+		});
+	const dataTaskId = ctx[0].id;
+	const currentTaskElementYPosition = displayedTasks.find(task => task.id === dataTaskId).y + 3;
+	const taskElement = document.querySelector(`[data-task-id="${dataTaskId}"]`);
+
+	const { x, width } = ctx[6];
+	set_style(taskElement, "transform", `translate(${x}px,${currentTaskElementYPosition}px)`);
+
+	if (width === 0) {
+		set_style(taskElement, "width", `1px`);
+	}
+}
+
 // (639:20) {#each visibleTasks as task (task.model.id)}
 function create_each_block_1(key_1, ctx) {
 	let first;
@@ -3438,6 +3478,21 @@ function create_each_block_1(key_1, ctx) {
 
 			const dataTaskId = task.$$.ctx[0].id;
 			const emitData = { dataTaskId, task };
+
+			if(!StelteGanttScopeHolder.displayedTasks){
+
+				StelteGanttScopeHolder.displayedTasks = [emitData];
+			} else {
+
+				StelteGanttScopeHolder.displayedTasks.push(emitData);
+			}
+
+			const displayedRowIds = StelteGanttScopeHolder.displayedTaskRows.map(i => i[0].model.id);
+			StelteGanttScopeHolder.displayedTasks
+				.map(i => i.task.$$.ctx)
+				.filter(i => displayedRowIds.includes(i[0].resourceId))
+				.forEach(i => {updateTasksPosition(i)});
+
 			StelteGanttScopeHolder.taskLifeCycle.didMount.emit(emitData);
 
 		},
@@ -3468,6 +3523,12 @@ function create_each_block_1(key_1, ctx) {
 
 			const dataTaskId = task.$$.ctx[0].id;
 			const emitData = { dataTaskId, task };
+
+			if (StelteGanttScopeHolder.displayedTasks) {
+				StelteGanttScopeHolder.displayedTasks =
+					StelteGanttScopeHolder.displayedTasks.filter(task => task.dataTaskId !== dataTaskId);
+			}
+
 			StelteGanttScopeHolder.taskLifeCycle.unMount.emit(emitData);
 
 			if (detaching) detach(first);
@@ -6430,29 +6491,30 @@ function instance$b($$self, $$props, $$invalidate) {
 		updateYPositions(row);
 	}
 
-	function updateYPositions(row) {
+	async function updateYPositions(row) {
 		const rowHeight = row.height;
-		let y = row.y;
+		let y = 0; //row.y;
 
 		const index = $rowStore.ids.findIndex(w => w === row.model.id);
-		const limitRowIds = $rowStore.ids.slice(index, index + 50)
+		const limitRowIds = $rowStore.ids//.slice(index, index + 50)
 
 		limitRowIds.forEach(id => {
 			const row = $rowStore.entities[id];
 
 			if (!row.hidden) {
-				set_store_value(rowStore, $rowStore.entities[id].y = y, $rowStore);
+				set_store_value_async(rowStore, $rowStore.entities[id].y = y, $rowStore);
 				y += rowHeight;
 			}
 		});
+		updateTasksPosition(task.$$.ctx);
 
-		$taskStore.ids.forEach(id => {
-			const task = $taskStore.entities[id];
-			const row = $rowStore.entities[task.model.resourceId];
-			if (limitRowIds.indexOf(row.model.id) > - 1) {
-				set_store_value(taskStore, $taskStore.entities[id].top = row.y + $rowPadding, $taskStore);
-			}
-		});
+		// $taskStore.ids.forEach(id => {
+		// 	const task = $taskStore.entities[id];
+		// 	const row = $rowStore.entities[task.model.resourceId];
+		// 	if (limitRowIds.indexOf(row.model.id) > - 1) {
+		// 		set_store_value_async(taskStore, $taskStore.entities[id].top = row.y + $rowPadding, $taskStore,6454);
+		// 	}
+		// });
 	}
 
 	// if gantt displays a bottom scrollbar and table does not, we need to pad out the table
@@ -7028,7 +7090,9 @@ class SvelteGanttExternal {
 }
 
 var StelteGanttScopeHolder = {/*
-    taskLifeCycle - Use for custom or listening the task life cycle event (ref: Gantt.api.task.lifeCycle)
+    taskLifeCycle - Use for custom or listening the task life cycle event (ref: Gantt.api.task.lifeCycle),
+	displayedTasks - current list task displayed,
+	displayedTaskRows - current displayed rows
 */};
 // import { SvelteGanttTableComponent } from './modules/table';
 var SvelteGantt = Gantt;
