@@ -6496,7 +6496,7 @@ function instance$b($$self, $$props, $$invalidate) {
 		let y = 0; //row.y;
 
 		const index = $rowStore.ids.findIndex(w => w === row.model.id);
-		const limitRowIds = $rowStore.ids//.slice(index, index + 50)
+		const limitRowIds = $rowStore.ids; //.slice(index, index + 1)
 
 		limitRowIds.forEach(id => {
 			const row = $rowStore.entities[id];
@@ -6511,9 +6511,9 @@ function instance$b($$self, $$props, $$invalidate) {
 		// $taskStore.ids.forEach(id => {
 		// 	const task = $taskStore.entities[id];
 		// 	const row = $rowStore.entities[task.model.resourceId];
-		// 	if (limitRowIds.indexOf(row.model.id) > - 1) {
+		 	// if (limitRowIds.indexOf(row.model.id) > - 1) {
 		// 		set_store_value_async(taskStore, $taskStore.entities[id].top = row.y + $rowPadding, $taskStore,6454);
-		// 	}
+		 	// }
 		// });
 	}
 
