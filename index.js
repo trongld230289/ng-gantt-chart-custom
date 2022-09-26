@@ -1407,7 +1407,7 @@ function create_fragment(ctx) {
 
 			if (dirty[0] & /*_position*/ 64) {
 				set_style(div1, "transform", "translate(" + /*_position*/ ctx[6].x + "px, " + /*_position*/ ctx[6].y + "px)");
-				updateTasksPosition(ctx);
+				updateTaskPositions(ctx);
 			}
 
 			if (dirty[0] & /*model, _dragging, _resizing*/ 49) {
@@ -3415,7 +3415,7 @@ function create_each_block_2(key_1, ctx) {
 	};
 }
 
-function updateTasksPosition(ctx) {
+function updateTaskPositions(ctx) {
 	const displayedTaskRows = StelteGanttScopeHolder.displayedTaskRows.map(i =>{ const {y, model, children} = i[0]; return {y, ...model, children}});
 	const displayedTaskRowIds = displayedTaskRows.map(i => i.id)
 	const displayedTasks = StelteGanttScopeHolder.displayedTasks
@@ -3491,7 +3491,7 @@ function create_each_block_1(key_1, ctx) {
 			StelteGanttScopeHolder.displayedTasks
 				.map(i => i.task.$$.ctx)
 				.filter(i => displayedRowIds.includes(i[0].resourceId))
-				.forEach(i => {updateTasksPosition(i)});
+				.forEach(i => {updateTaskPositions(i)});
 
 			StelteGanttScopeHolder.taskLifeCycle.didMount.emit(emitData);
 
@@ -6506,7 +6506,7 @@ function instance$b($$self, $$props, $$invalidate) {
 				y += rowHeight;
 			}
 		});
-		updateTasksPosition(task.$$.ctx);
+		updateTaskPositions(task.$$.ctx);
 
 		// $taskStore.ids.forEach(id => {
 		// 	const task = $taskStore.entities[id];
