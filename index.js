@@ -153,7 +153,7 @@ function set_data(text, data) {
 		text.data = data;
 }
 function set_style(node, key, value, important) {
-	node.style.setProperty(key, value, important ? 'important' : '');
+	node && node.style.setProperty(key, value, important ? 'important' : '');
 }
 // unfortunately this can't be a constant as that wouldn't be tree-shakeable
 // so we cache the result instead
