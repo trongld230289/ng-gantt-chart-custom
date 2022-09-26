@@ -6506,7 +6506,6 @@ function instance$b($$self, $$props, $$invalidate) {
 				y += rowHeight;
 			}
 		});
-		updateTaskPositions(task.$$.ctx);
 
 		// $taskStore.ids.forEach(id => {
 		// 	const task = $taskStore.entities[id];
