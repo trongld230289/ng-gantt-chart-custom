@@ -3416,18 +3416,18 @@ function create_each_block_2(key_1, ctx) {
 }
 
 function updateTaskPositions(ctx) {
-	const displayedTaskRows = StelteGanttScopeHolder.displayedTaskRows.map(i =>{ const {y, model, children} = i[0]; return {y, ...model, children}});
+	const displayedTaskRows = StelteGanttScopeHolder.displayedTaskRows.map(i => { 
+		const { y, model, children } = i[0];
+		return { y, ...model, children };
+	});
 	const displayedTaskRowIds = displayedTaskRows.map(i => i.id)
 	const displayedTasks = StelteGanttScopeHolder.displayedTasks
 		.map(i => i.task.$$.ctx[0])
 		.filter(i => displayedTaskRowIds.find(id => id === i.resourceId))
 		.map(i => {
 			const taskRowByTask = displayedTaskRows.find(tr => tr.id === i.resourceId);
-			const {y} = taskRowByTask;
-			return {
-				y,
-				...i,
-			}
+			const { y } = taskRowByTask;
+			return { y, ...i };
 		});
 	const dataTaskId = ctx[0].id;
 	const currentTaskElementYPosition = displayedTasks.find(task => task.id === dataTaskId).y + 3;
@@ -3479,7 +3479,7 @@ function create_each_block_1(key_1, ctx) {
 			const dataTaskId = task.$$.ctx[0].id;
 			const emitData = { dataTaskId, task };
 
-			if(!StelteGanttScopeHolder.displayedTasks){
+			if (!StelteGanttScopeHolder.displayedTasks) {
 
 				StelteGanttScopeHolder.displayedTasks = [emitData];
 			} else {
@@ -6511,9 +6511,9 @@ function instance$b($$self, $$props, $$invalidate) {
 		// $taskStore.ids.forEach(id => {
 		// 	const task = $taskStore.entities[id];
 		// 	const row = $rowStore.entities[task.model.resourceId];
-		 	// if (limitRowIds.indexOf(row.model.id) > - 1) {
+			//if (limitRowIds.indexOf(row.model.id) > - 1) {
 		// 		set_store_value_async(taskStore, $taskStore.entities[id].top = row.y + $rowPadding, $taskStore,6454);
-		 	// }
+			//}
 		// });
 	}
 
