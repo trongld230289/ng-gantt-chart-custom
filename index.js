@@ -6493,10 +6493,10 @@ function instance$b($$self, $$props, $$invalidate) {
 
 	async function updateYPositions(row) {
 		const rowHeight = row.height;
-		let y = 0; //row.y;
+		let y = row.y;
 
 		const index = $rowStore.ids.findIndex(w => w === row.model.id);
-		const limitRowIds = $rowStore.ids; //.slice(index, index + 1)
+		const limitRowIds = $rowStore.ids.slice(index, index + 50);
 
 		limitRowIds.forEach(id => {
 			const row = $rowStore.entities[id];
