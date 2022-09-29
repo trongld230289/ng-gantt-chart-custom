@@ -6495,8 +6495,8 @@ function instance$b($$self, $$props, $$invalidate) {
 		const rowHeight = row.height;
 		let y = 0;
 
-		const index = $rowStore.ids.findIndex(w => w === row.model.id);
-		const limitRowIds = $rowStore.ids.slice(index, index + 2000);
+		// const index = $rowStore.ids.findIndex(w => w === row.model.id);
+		const limitRowIds = $rowStore.ids.filter((v,i) => i < 1000);
 
 		limitRowIds.forEach(id => {
 			const row = $rowStore.entities[id];
