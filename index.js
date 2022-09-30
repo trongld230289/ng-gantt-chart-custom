@@ -1710,6 +1710,17 @@ function create_if_block$1(ctx) {
 		}
 	};
 }
+function updateVisibleRowsYPosision(each_value_3) {
+
+	if (each_value_3 && each_value_3.length > 0) {
+		let { y, height } = each_value_3[0];
+		each_value_3.forEach(ctx => {
+			ctx.y = y;
+			y += height
+		})
+	}
+
+}
 
 function create_fragment$1(ctx) {
 	let div;
@@ -1729,14 +1740,6 @@ function create_fragment$1(ctx) {
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
-			
-			if (!StelteGanttScopeHolder.displayedTaskRows) {
-
-				StelteGanttScopeHolder.displayedTaskRows = [ctx];
-			} else {
-
-				StelteGanttScopeHolder.displayedTaskRows.push(ctx);
-			}
 
 			if (if_block) if_block.m(div, null);
 			/*div_binding*/ ctx[8](div);
@@ -1781,10 +1784,6 @@ function create_fragment$1(ctx) {
 			if (detaching) detach(div);
 			if (if_block) if_block.d();
 			/*div_binding*/ ctx[8](null);
-			if (StelteGanttScopeHolder.displayedTasks) {
-				StelteGanttScopeHolder.displayedTaskRows = 
-					StelteGanttScopeHolder.displayedTaskRows.filter(row => row[0].model.id !== ctx[0].model.id);
-			}
 		}
 	};
 }
@@ -3417,7 +3416,7 @@ function create_each_block_2(key_1, ctx) {
 
 function updateTaskPositions(ctx) {
 	const displayedTaskRows = StelteGanttScopeHolder.displayedTaskRows.map(i => { 
-		const { y, model, children } = i[0];
+		const { y, model, children } = i;
 		return { y, ...model, children };
 	});
 	const displayedTaskRowIds = displayedTaskRows.map(i => i.id)
@@ -3430,17 +3429,22 @@ function updateTaskPositions(ctx) {
 			return { y, ...i };
 		});
 	const dataTaskId = ctx[0].id;
-	const currentTaskElementYPosition = displayedTasks.find(task => task.id === dataTaskId).y + 3;
-	const taskElement = document.querySelector(`[data-task-id="${dataTaskId}"]`);
 
-	const { x, width } = ctx[6];
-	set_style(taskElement, "transform", `translate(${x}px,${currentTaskElementYPosition}px)`);
+	const currentTask = displayedTasks.find(task => task.id === dataTaskId);
+	if (!!currentTask) {
 
-	if (width === 0) {
-		set_style(taskElement, "width", `1px`);
+		const currentTaskElementYPosition = currentTask.y + 3;
+		const taskElement = document.querySelector(`[data-task-id="${dataTaskId}"]`);
+
+		const { x, width } = ctx[6];
+		set_style(taskElement, "transform", `translate(${x}px,${currentTaskElementYPosition}px)`);
+
+		if (width === 0) {
+			set_style(taskElement, "width", `1px`);
+		}
 	}
-}
 
+}
 // (639:20) {#each visibleTasks as task (task.model.id)}
 function create_each_block_1(key_1, ctx) {
 	let first;
@@ -3487,7 +3491,7 @@ function create_each_block_1(key_1, ctx) {
 				StelteGanttScopeHolder.displayedTasks.push(emitData);
 			}
 
-			const displayedRowIds = StelteGanttScopeHolder.displayedTaskRows.map(i => i[0].model.id);
+			const displayedRowIds = StelteGanttScopeHolder.displayedTaskRows.map(i => i.model.id);
 			StelteGanttScopeHolder.displayedTasks
 				.map(i => i.task.$$.ctx)
 				.filter(i => displayedRowIds.includes(i[0].resourceId))
@@ -3695,6 +3699,7 @@ function create_fragment$8(ctx) {
 	let each_value_3 = /*visibleRows*/ ctx[17];
 	const get_key_1 = ctx => /*row*/ ctx[128].model.id;
 
+	StelteGanttScopeHolder.displayedTaskRows = each_value_3;
 	for (let i = 0; i < each_value_3.length; i += 1) {
 		let child_ctx = get_each_context_3(ctx, each_value_3, i);
 		let key = get_key_1(child_ctx);
@@ -3927,6 +3932,10 @@ function create_fragment$8(ctx) {
 
 			if (dirty[0] & /*visibleRows*/ 131072) {
 				const each_value_3 = /*visibleRows*/ ctx[17];
+
+				updateVisibleRowsYPosision(each_value_3);
+				StelteGanttScopeHolder.displayedTaskRows = each_value_3;
+
 				group_outros();
 				each_blocks_3 = update_keyed_each(each_blocks_3, dirty, get_key_1, 1, ctx, each_value_3, each2_lookup, div3, outro_and_destroy_block, create_each_block_3, null, get_each_context_3);
 				check_outros();
@@ -6492,21 +6501,27 @@ function instance$b($$self, $$props, $$invalidate) {
 	}
 
 	async function updateYPositions(row) {
-		const rowHeight = row.height;
-		let y = 0;
 
-		// const index = $rowStore.ids.findIndex(w => w === row.model.id);
-		const limitRowIds = $rowStore.ids.filter((v,i) => i < 1000);
+		const { height, children } = row;
+		const { displayedTaskRows } = StelteGanttScopeHolder;
 
-		limitRowIds.forEach(id => {
+		const childRowIds = children.map(c => c.model.id);
+
+		const currentRowIds = displayedTaskRows.map(i => i.model.id);
+
+		const updateRowIds = [...currentRowIds, ...childRowIds];
+
+		let y = $rowStore.entities[updateRowIds[0]].y;
+		updateRowIds.forEach(id => {
 			const row = $rowStore.entities[id];
 
 			if (!row.hidden) {
 				set_store_value_async(rowStore, $rowStore.entities[id].y = y, $rowStore);
-				y += rowHeight;
+				y += height;
 			}
 		});
 
+		StelteGanttScopeHolder.$taskStore = $taskStore;
 		// $taskStore.ids.forEach(id => {
 		// 	const task = $taskStore.entities[id];
 		// 	const row = $rowStore.entities[task.model.resourceId];
@@ -7088,10 +7103,11 @@ class SvelteGanttExternal {
 	}
 }
 
-var StelteGanttScopeHolder = {/*
+var StelteGanttScopeHolder = {
+	displayedTasks: [],
+	displayedTaskRows: []
+	/*
     taskLifeCycle - Use for custom or listening the task life cycle event (ref: Gantt.api.task.lifeCycle),
-	displayedTasks - current list task displayed,
-	displayedTaskRows - current displayed rows
 */};
 // import { SvelteGanttTableComponent } from './modules/table';
 var SvelteGantt = Gantt;
