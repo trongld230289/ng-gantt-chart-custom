@@ -1407,7 +1407,7 @@ function create_fragment(ctx) {
 
 			if (dirty[0] & /*_position*/ 64) {
 				set_style(div1, "transform", "translate(" + /*_position*/ ctx[6].x + "px, " + /*_position*/ ctx[6].y + "px)");
-				updateTaskPositions(ctx);
+				updateTaskPositions();
 			}
 
 			if (dirty[0] & /*model, _dragging, _resizing*/ 49) {
@@ -3414,39 +3414,30 @@ function create_each_block_2(key_1, ctx) {
 	};
 }
 
-function updateTaskPositions(ctx) {
-	const displayedTaskRows = StelteGanttScopeHolder.displayedTaskRows.map(i => { 
-		const { y, model, children } = i;
-		return { y, ...model, children };
-	});
-	const displayedTaskRowIds = displayedTaskRows.map(i => i.id)
-	const displayedTasks = StelteGanttScopeHolder.displayedTasks
-		.map(i => i.task.$$.ctx[0])
-		.filter(i => displayedTaskRowIds.find(id => id === i.resourceId))
-		.map(i => {
-			const taskRowByTask = displayedTaskRows.find(tr => tr.id === i.resourceId);
-			const { y } = taskRowByTask;
-			return { y, ...i };
-		});
-	const dataTaskId = ctx[0].id;
-
-	const currentTask = displayedTasks.find(task => task.id === dataTaskId);
-	if (!!currentTask) {
-
-		const currentTaskElementYPosition = currentTask.y + 3;
-		const taskElement = document.querySelector(`[data-task-id="${dataTaskId}"]`);
-
-		const { x, width } = ctx[6];
-		set_style(taskElement, "transform", `translate(${x}px,${currentTaskElementYPosition}px)`);
-
-		if (width === 0) {
-			set_style(taskElement, "width", `1px`);
+function updateTaskPositions() {
+	StelteGanttScopeHolder.displayedTasks.map(taskModel => {
+		const { model, top, left } = taskModel;
+		const dataTaskId = model.id;
+		const taskRow = StelteGanttScopeHolder.displayedTaskRows.find(taskRow => taskRow.model.id === model.resourceId);
+		if(taskRow) {
+			const y = taskRow.y + 3;
+			const element = document.querySelector(`[data-task-id="${dataTaskId}"]`);
+			set_style(element,"transform",`translate(${left}px, ${y}px)`);
+				
 		}
-	}
+	})
+}
 
+function updateTaskCtxTopPosition(ctx) {
+	const taskRow = StelteGanttScopeHolder.displayedTaskRows
+		.find(taskRow => taskRow.model.id === ctx[122].model.resourceId);
+
+	if (!taskRow) return;
+	ctx[122].top = taskRow.y + 3;
 }
 // (639:20) {#each visibleTasks as task (task.model.id)}
 function create_each_block_1(key_1, ctx) {
+	updateTaskCtxTopPosition(ctx);
 	let first;
 	let current;
 
@@ -3479,26 +3470,10 @@ function create_each_block_1(key_1, ctx) {
 			insert(target, first, anchor);
 			mount_component(task, target, anchor);
 			current = true;
-
 			const dataTaskId = task.$$.ctx[0].id;
 			const emitData = { dataTaskId, task };
 
-			if (!StelteGanttScopeHolder.displayedTasks) {
-
-				StelteGanttScopeHolder.displayedTasks = [emitData];
-			} else {
-
-				StelteGanttScopeHolder.displayedTasks.push(emitData);
-			}
-
-			const displayedRowIds = StelteGanttScopeHolder.displayedTaskRows.map(i => i.model.id);
-			StelteGanttScopeHolder.displayedTasks
-				.map(i => i.task.$$.ctx)
-				.filter(i => displayedRowIds.includes(i[0].resourceId))
-				.forEach(i => {updateTaskPositions(i)});
-
 			StelteGanttScopeHolder.taskLifeCycle.didMount.emit(emitData);
-
 		},
 		p(ctx, dirty) {
 			const task_changes = (dirty[0] & /*visibleTasks*/ 262144)
@@ -3527,11 +3502,6 @@ function create_each_block_1(key_1, ctx) {
 
 			const dataTaskId = task.$$.ctx[0].id;
 			const emitData = { dataTaskId, task };
-
-			if (StelteGanttScopeHolder.displayedTasks) {
-				StelteGanttScopeHolder.displayedTasks =
-					StelteGanttScopeHolder.displayedTasks.filter(task => task.dataTaskId !== dataTaskId);
-			}
 
 			StelteGanttScopeHolder.taskLifeCycle.unMount.emit(emitData);
 
@@ -3718,6 +3688,7 @@ function create_fragment$8(ctx) {
 	let each_value_1 = /*visibleTasks*/ ctx[18];
 	const get_key_3 = ctx => /*task*/ ctx[122].model.id;
 
+	StelteGanttScopeHolder.displayedTasks = each_value_1;
 	for (let i = 0; i < each_value_1.length; i += 1) {
 		let child_ctx = get_each_context_1(ctx, each_value_1, i);
 		let key = get_key_3(child_ctx);
@@ -3958,9 +3929,13 @@ function create_fragment$8(ctx) {
 
 			if (dirty[0] & /*visibleTasks*/ 262144) {
 				const each_value_1 = /*visibleTasks*/ ctx[18];
+				StelteGanttScopeHolder.displayedTasks = each_value_1;
+
 				group_outros();
 				each_blocks_1 = update_keyed_each(each_blocks_1, dirty, get_key_3, 1, ctx, each_value_1, each4_lookup, div5, outro_and_destroy_block, create_each_block_1, null, get_each_context_1);
 				check_outros();
+
+				updateTaskPositions();
 			}
 
 			if (dirty[0] & /*ganttBodyModules, paddingTop, paddingBottom, visibleRows*/ 229440 | dirty[1] & /*$$restProps*/ 4096) {
@@ -6501,15 +6476,16 @@ function instance$b($$self, $$props, $$invalidate) {
 	}
 
 	async function updateYPositions(row) {
-
+		
 		const { height, children } = row;
 		const { displayedTaskRows } = StelteGanttScopeHolder;
 
 		const childRowIds = children.map(c => c.model.id);
 
 		const currentRowIds = displayedTaskRows.map(i => i.model.id);
-
+		
 		const updateRowIds = [...currentRowIds, ...childRowIds];
+		const updatedRow = $rowStore.ids.filter(i => updateRowIds.includes(i));
 
 		let y = $rowStore.entities[updateRowIds[0]].y;
 		updateRowIds.forEach(id => {
