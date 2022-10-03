@@ -1407,7 +1407,7 @@ function create_fragment(ctx) {
 
 			if (dirty[0] & /*_position*/ 64) {
 				set_style(div1, "transform", "translate(" + /*_position*/ ctx[6].x + "px, " + /*_position*/ ctx[6].y + "px)");
-				updateTaskPositions();
+				updateTaskPositions(ctx);
 			}
 
 			if (dirty[0] & /*model, _dragging, _resizing*/ 49) {
@@ -3414,7 +3414,15 @@ function create_each_block_2(key_1, ctx) {
 	};
 }
 
-function updateTaskPositions() {
+function updateTaskPositions(ctx) {
+
+	if (ctx) {
+		const { x, width } = ctx[6];
+		const updatedTask = StelteGanttScopeHolder.displayedTasks.find(taskModel => taskModel.model.id === ctx[0].id);
+		updatedTask.left = x;
+		updatedTask.width = width;
+    }
+
 	StelteGanttScopeHolder.displayedTasks.map(taskModel => {
 		const { model, top, left } = taskModel;
 		const dataTaskId = model.id;
