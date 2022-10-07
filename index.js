@@ -358,19 +358,6 @@ function update($$) {
 		$$.dirty = [-1];
 		$$.fragment && $$.fragment.p($$.ctx, dirty);
 		$$.after_update.forEach(add_render_callback);
-
-		if ($$.ctx[6] && $$.ctx[0]) {
-            const { x, width } = $$.ctx[6];
-            const updatedTask = StelteGanttScopeHolder.displayedTasks
-                .find(taskModel => taskModel.model.id === $$.ctx[0].id);
-            if(updatedTask) {
-                updatedTask.left = x;
-                updatedTask.width = width;
-                const y = updatedTask.y + 3;
-                const element = document.querySelector(`[data-task-id="${$$.ctx[0].id}"]`);
-                set_style(element,"transform",`translate(${x}px, ${y}px)`);
-            }
-        }
 	}
 }
 const outroing = new Set();
@@ -1345,6 +1332,16 @@ function create_fragment(ctx) {
 			append(div1, t2);
 			if (if_block3) if_block3.m(div1, null);
 
+			const rowParent = StelteGanttScopeHolder.displayedTaskRows.find(taskRow => taskRow.model.id === ctx[0].resourceId);
+			if (rowParent) {
+				const y = rowParent.y + 3;
+				ctx[6].y = y;
+				set_style(div1, "transform", "translate(" + /*_position*/ ctx[6].x + "px, " + /*_position*/ ctx[6].y + "px)");
+				if (ctx[6].width < 1) {
+					set_style(div1, "width", /*_position*/ 1 + "px");
+				}
+			}
+
 			if (!mounted) {
 				dispose = action_destroyer(ctx[10].call(null, div1));
 				mounted = true;
@@ -1408,6 +1405,16 @@ function create_fragment(ctx) {
 
 			if (dirty[0] & /*model*/ 1 && div1_class_value !== (div1_class_value = "sg-task " + /*model*/ ctx[0].classes + " svelte-19txnoa")) {
 				attr(div1, "class", div1_class_value);
+			}
+
+			const rowParent = StelteGanttScopeHolder.displayedTaskRows.find(taskRow => taskRow.model.id === ctx[0].resourceId);
+			if (rowParent) {
+				const y = rowParent.y + 3;
+				ctx[6].y = y;
+				set_style(div1, "transform", "translate(" + /*_position*/ ctx[6].x + "px, " + /*_position*/ ctx[6].y + "px)");
+				if(ctx[6].width < 1) {
+					set_style(div1, "width", /*_position*/ 1 + "px");
+				}
 			}
 
 			if (dirty[0] & /*_position*/ 64) {
@@ -3426,31 +3433,8 @@ function create_each_block_2(key_1, ctx) {
 	};
 }
 
-function updateTaskPositions() {
-
-	StelteGanttScopeHolder.displayedTasks.map(taskModel => {
-		const { model, top, left } = taskModel;
-		const dataTaskId = model.id;
-		const taskRow = StelteGanttScopeHolder.displayedTaskRows.find(taskRow => taskRow.model.id === model.resourceId);
-		if(taskRow) {
-			const y = taskRow.y + 3;
-			const element = document.querySelector(`[data-task-id="${dataTaskId}"]`);
-			set_style(element,"transform",`translate(${left}px, ${y}px)`);
-				
-		}
-	})
-}
-
-function updateTaskCtxTopPosition(ctx) {
-	const taskRow = StelteGanttScopeHolder.displayedTaskRows
-		.find(taskRow => taskRow.model.id === ctx[122].model.resourceId);
-
-	if (!taskRow) return;
-	ctx[122].top = taskRow.y + 3;
-}
 // (639:20) {#each visibleTasks as task (task.model.id)}
 function create_each_block_1(key_1, ctx) {
-	updateTaskCtxTopPosition(ctx);
 	let first;
 	let current;
 
@@ -3948,7 +3932,6 @@ function create_fragment$8(ctx) {
 				each_blocks_1 = update_keyed_each(each_blocks_1, dirty, get_key_3, 1, ctx, each_value_1, each4_lookup, div5, outro_and_destroy_block, create_each_block_1, null, get_each_context_1);
 				check_outros();
 
-				updateTaskPositions();
 			}
 
 			if (dirty[0] & /*ganttBodyModules, paddingTop, paddingBottom, visibleRows*/ 229440 | dirty[1] & /*$$restProps*/ 4096) {
