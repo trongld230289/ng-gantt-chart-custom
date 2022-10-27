@@ -2256,23 +2256,55 @@ function instance$4($$self, $$props, $$invalidate) {
 				const offset = header.offset || 1;
 
 				if (header.unit == 'week') {
-					const from_date = $from.startOf('week');
-					const to_date = $to.endOf('week');
-					var weekRange = to_date.diff(from_date, 'week');
+					const from_date = $from;
+					const to_date = $to;
+					var weekRange = to_date.clone().endOf('week').diff(from_date.clone().startOf('week'), 'week');
 					var dateRange = to_date.diff(from_date, 'days');
 
 					headerTime = from_date.clone();//.startOf(header.unit);
 					for (let i = 0; i <= weekRange; i++) {
 						//var quarterName = "Q" + headerTime.quarter();
+
+						let from, to, weekDateRange, label;
+
+						if (i === 0) {
+
+							from = headerTime.clone();
+							to = headerTime.clone().endOf('week');
+
+						} else if (i < weekRange) {
+
+							from = headerTime.clone().startOf('week');
+							to = headerTime.clone().endOf('week');
+
+						} else if (i === weekRange) {
+
+							from = headerTime.clone().startOf('week');
+							to = $to;
+
+						}
+
+						weekDateRange = to.diff(from, 'days') + 1;
+						label = from.format('ddd DD');
+
 						headers.push({
-							width: baseWidth * 7,
-							label: headerTime.format('ddd DD'),
-							from: headerTime.clone(),
-							to: headerTime.clone().add(offset, header.unit),
-							unit: header.unit
+							width: baseWidth * weekDateRange,
+							label,
+							from,
+							to,
+							unit: header.unit,
 						});
 
 						headerTime.add(offset, header.unit);
+					}
+
+					const tableWidth = headers.map(a => a.width).reduce((a,b)=>a+b)
+
+					if (StelteGanttScopeHolder.tableElement.div0 && StelteGanttScopeHolder.tableElement.div6) {
+						const div0 = StelteGanttScopeHolder.tableElement.div0;
+						const div6 = StelteGanttScopeHolder.tableElement.div6;
+						set_style(div0,'width',`${tableWidth}px`);
+						set_style(div6,'width',`${tableWidth}px`);
 					}
 
 				} else if (header.unit == 'quarter') {
@@ -3844,6 +3876,7 @@ function create_fragment$8(ctx) {
 
 				mounted = true;
 			}
+			StelteGanttScopeHolder.tableElement = { div0, div6 }
 		},
 		p(ctx, dirty) {
 			if (dirty[0] & /*tableWidth, ganttElement, ganttTableModules, rowContainerHeight, paddingTop, paddingBottom, visibleRows*/ 245922 | dirty[1] & /*onResize, $$restProps*/ 4608) {
@@ -4078,6 +4111,7 @@ function create_fragment$8(ctx) {
 			/*div9_binding*/ ctx[118](null);
 			mounted = false;
 			run_all(dispose);
+			StelteGanttScopeHolder.tableElement = {}
 		}
 	};
 }
@@ -7077,7 +7111,9 @@ class SvelteGanttExternal {
 
 var StelteGanttScopeHolder = {
 	displayedTasks: [],
-	displayedTaskRows: []
+	displayedTaskRows: [],
+	displayedTaskRowsObj: {},
+	tableElement: {}
 	/*
     taskLifeCycle - Use for custom or listening the task life cycle event (ref: Gantt.api.task.lifeCycle),
 */};
