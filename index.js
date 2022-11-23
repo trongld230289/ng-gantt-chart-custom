@@ -3804,6 +3804,7 @@ function create_fragment$8(ctx) {
 			attr(div8, "class", "sg-timeline sg-view svelte-12fxs8g");
 			attr(div9, "class", div9_class_value = "sg-gantt " + /*classes*/ ctx[4] + " svelte-12fxs8g");
 			toggle_class(div9, "sg-disable-transition", !/*disableTransition*/ ctx[19]);
+			StelteGanttScopeHolder.virtualScroll.scrollBlock = div7;
 		},
 		m(target, anchor) {
 			insert(target, div9, anchor);
@@ -4112,6 +4113,7 @@ function create_fragment$8(ctx) {
 			mounted = false;
 			run_all(dispose);
 			StelteGanttScopeHolder.tableElement = {}
+			StelteGanttScopeHolder.virtualScroll.scrollBlock = null;
 		}
 	};
 }
@@ -5297,9 +5299,11 @@ class Gantt extends SvelteComponent {
 	get customApi() {
 		return {
 			setConfig: (config) => {
-				StelteGanttScopeHolder.customGanttConfig = config;
+				const defaultConfig = {...StelteGanttScopeHolder.customGanttConfig};
+				StelteGanttScopeHolder.customGanttConfig = {...defaultConfig, ...config};
 			},
-			onRowSelected$: StelteGanttScopeHolder.onRowSelected$
+			onRowSelected$: StelteGanttScopeHolder.onRowSelected$,
+			selectedRowEmitter$: StelteGanttScopeHolder.selectedRowEmitter$
 		};
 	}
 }
@@ -5488,7 +5492,17 @@ function instance$9($$self, $$props, $$invalidate) {
 		}
 
 		if (data.model.classes !== "childRow") {
-			StelteGanttScopeHolder.onRowSelected$.next(data);
+			if (StelteGanttScopeHolder.virtualScroll.isScroll > 0) {
+				StelteGanttScopeHolder.onRowSelected$.data = data;
+				StelteGanttScopeHolder.onRowSelected$.prevData = data;
+				StelteGanttScopeHolder.virtualScroll.isScroll--;
+			} else {
+				StelteGanttScopeHolder.onRowSelected$.next(data);
+				StelteGanttScopeHolder.virtualScroll.isExpandedClicked ++;
+				if (StelteGanttScopeHolder.virtualScroll.isExpandedClicked > 1) {
+					StelteGanttScopeHolder.virtualScroll.isExpandedClicked = 0;
+				}
+			}
 		}
 	}
 
@@ -6355,6 +6369,10 @@ function create_fragment$b(ctx) {
 			}
 		},
 		p(ctx, dirty) {
+			const entities = ctx[17].entities;
+			const ids = ctx[17].ids;
+			const data = ids.filter(id => !entities[id].hidden).map(id => entities[id]);
+			StelteGanttScopeHolder.taskRows = data;
 			if (dirty[0] & /*tableHeaders*/ 32) {
 				each_value_1 = /*tableHeaders*/ ctx[5];
 				let i;
@@ -7178,17 +7196,62 @@ function BehaviorSubject(data) {
 var StelteGanttScopeHolder = {
 	displayedTasks: [],
 	displayedTaskRows: [],
-	displayedTaskRowsObj: {},
-	selectedRow: {},
+	taskRows: [],
 	tableElement: {},
 	onRowSelected$: new BehaviorSubject(null),
 	customGanttConfig: {
-		selectedRowHeaderColor: 'transparent'
-	}
+		selectedRowHeaderColor: 'transparent',
+		virtualScroll: { rowHeight: /* default */ 36 },
+	},
+	virtualScroll: {
+		scrollBlock: null,
+		scrollToTaskRowId: function(taskRowId) {
+			const height = StelteGanttScopeHolder.customGanttConfig.virtualScroll.rowHeight;
+			const indexOfRow = StelteGanttScopeHolder.taskRows.findIndex(x => x.model.id === taskRowId);
+			const index = indexOfRow;
+			this.scrollBlock && this.scrollBlock.scrollTo(0, height* index);
+		},
+		isScroll: 0,
+		isExpandedClicked: 0
+	},
+	selectedRowEmitter$: new BehaviorSubject(null),
+		
 };
+StelteGanttScopeHolder.selectedRowEmitter$.subscribe(data => {
+	if (StelteGanttScopeHolder.virtualScroll.isExpandedClicked > 0) {
+		StelteGanttScopeHolder.virtualScroll.isExpandedClicked--;
+		return;
+	}
+	let isDiff = true;
+	if (data.current && data.prev) {
+		isDiff = data.current.id !== data.prev.id;
+	}
+	if (isDiff) {
+
+		if (data.current) {
+
+			const selectedRowData = StelteGanttScopeHolder.taskRows.find(x => x.model.id === data.current.id);
+			if (selectedRowData) {
+
+				StelteGanttScopeHolder.virtualScroll.isScroll++;
+				if (StelteGanttScopeHolder.virtualScroll.isScroll > 1) {
+					StelteGanttScopeHolder.virtualScroll.isScroll = 0;
+				}
+
+				const expand = (div) => { !!div && div.firstChild.click(); }
+				StelteGanttScopeHolder.virtualScroll.scrollToTaskRowId(data.current.id);
+
+				setTimeout(() => {
+					expand(document.querySelector(`[data-row-id="${data.current.id}"]`));
+				}, 400);
+			}
+		}
+
+	}
+})
+
 // import { SvelteGanttTableComponent } from './modules/table';
 var SvelteGantt = Gantt;
 
 export { SvelteGantt, SvelteGanttDependencies, SvelteGanttExternal, SvelteGanttTable };
 //# sourceMappingURL=index.js.map
-// test

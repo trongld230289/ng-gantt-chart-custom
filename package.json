@@ -1,7 +1,7 @@
 {
   "name": "ng-gantt-chart-custom",
   "description": "Interactive JavaScript Gantt chart/resource booking component",
-  "version": "1.1.6",
+  "version": "1.1.8",
   "author": "trongld232@gmail.com",
   "repository": {
     "type": "git",
