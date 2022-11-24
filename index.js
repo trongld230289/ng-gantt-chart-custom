@@ -1332,7 +1332,7 @@ function create_fragment(ctx) {
 			append(div1, t2);
 			if (if_block3) if_block3.m(div1, null);
 
-			const rowParent = StelteGanttScopeHolder.displayedTaskRows.find(taskRow => taskRow.model.id === ctx[0].resourceId);
+			const rowParent = StelteGanttScopeHolder.taskRows.find(taskRow => taskRow.model.id === ctx[0].resourceId);
 			if (rowParent) {
 				const y = rowParent.y + 3;
 				ctx[6].y = y;
@@ -1407,7 +1407,7 @@ function create_fragment(ctx) {
 				attr(div1, "class", div1_class_value);
 			}
 
-			const rowParent = StelteGanttScopeHolder.displayedTaskRows.find(taskRow => taskRow.model.id === ctx[0].resourceId);
+			const rowParent = StelteGanttScopeHolder.taskRows.find(taskRow => taskRow.model.id === ctx[0].resourceId);
 			if (rowParent) {
 				const y = rowParent.y + 3;
 				ctx[6].y = y;
