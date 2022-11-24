@@ -7222,31 +7222,23 @@ StelteGanttScopeHolder.selectedRowEmitter$.subscribe(data => {
 		StelteGanttScopeHolder.virtualScroll.isExpandedClicked--;
 		return;
 	}
-	let isDiff = true;
-	if (data.current && data.prev) {
-		isDiff = data.current.id !== data.prev.id;
-	}
-	if (isDiff) {
 
-		if (data.current) {
+	if (data.current) {
 
-			const selectedRowData = StelteGanttScopeHolder.taskRows.find(x => x.model.id === data.current.id);
-			if (selectedRowData) {
-
-				StelteGanttScopeHolder.virtualScroll.isScroll++;
-				if (StelteGanttScopeHolder.virtualScroll.isScroll > 1) {
-					StelteGanttScopeHolder.virtualScroll.isScroll = 0;
-				}
-
-				const expand = (div) => { !!div && div.firstChild.click(); }
-				StelteGanttScopeHolder.virtualScroll.scrollToTaskRowId(data.current.id);
-
-				setTimeout(() => {
-					expand(document.querySelector(`[data-row-id="${data.current.id}"]`));
-				}, 400);
+		const selectedRowData = StelteGanttScopeHolder.taskRows.find(x => x.model.id === data.current.id);
+		if (selectedRowData) {
+			StelteGanttScopeHolder.virtualScroll.isScroll++;
+			if (StelteGanttScopeHolder.virtualScroll.isScroll > 1) {
+				StelteGanttScopeHolder.virtualScroll.isScroll = 0;
 			}
-		}
 
+			const expand = (div) => { !!div && div.firstChild.click(); }
+			StelteGanttScopeHolder.virtualScroll.scrollToTaskRowId(data.current.id);
+
+			setTimeout(() => {
+				expand(document.querySelector(`[data-row-id="${data.current.id}"]`));
+			}, 200);
+		}
 	}
 })
 
