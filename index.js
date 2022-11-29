@@ -1332,7 +1332,7 @@ function create_fragment(ctx) {
 			append(div1, t2);
 			if (if_block3) if_block3.m(div1, null);
 
-			const rowParent = StelteGanttScopeHolder.taskRows.find(taskRow => taskRow.model.id === ctx[0].resourceId);
+			const rowParent = StelteGanttScopeHolder.taskRowsEntities.find(x => x.model.id === ctx[0].resourceId);
 			if (rowParent) {
 				const y = rowParent.y + 3;
 				ctx[6].y = y;
@@ -1407,7 +1407,7 @@ function create_fragment(ctx) {
 				attr(div1, "class", div1_class_value);
 			}
 
-			const rowParent = StelteGanttScopeHolder.taskRows.find(taskRow => taskRow.model.id === ctx[0].resourceId);
+			const rowParent = StelteGanttScopeHolder.taskRowsEntities.find(x => x.model.id === ctx[0].resourceId);
 			if (rowParent) {
 				const y = rowParent.y + 3;
 				ctx[6].y = y;
@@ -3804,7 +3804,6 @@ function create_fragment$8(ctx) {
 			attr(div8, "class", "sg-timeline sg-view svelte-12fxs8g");
 			attr(div9, "class", div9_class_value = "sg-gantt " + /*classes*/ ctx[4] + " svelte-12fxs8g");
 			toggle_class(div9, "sg-disable-transition", !/*disableTransition*/ ctx[19]);
-			StelteGanttScopeHolder.virtualScroll.scrollBlock = div7;
 		},
 		m(target, anchor) {
 			insert(target, div9, anchor);
@@ -3932,17 +3931,6 @@ function create_fragment$8(ctx) {
 			if (dirty[0] & /*columns*/ 2048) columns_1_changes.columns = /*columns*/ ctx[11];
 			columns_1.$set(columns_1_changes);
 
-			if (dirty[0] & /*visibleRows*/ 131072) {
-				const each_value_3 = /*visibleRows*/ ctx[17];
-
-				updateVisibleRowsYPosision(each_value_3);
-				StelteGanttScopeHolder.displayedTaskRows = each_value_3;
-
-				group_outros();
-				each_blocks_3 = update_keyed_each(each_blocks_3, dirty, get_key_1, 1, ctx, each_value_3, each2_lookup, div3, outro_and_destroy_block, create_each_block_3, null, get_each_context_3);
-				check_outros();
-			}
-
 			if (!current || dirty[0] & /*paddingTop*/ 32768) {
 				set_style(div3, "transform", "translateY(" + /*paddingTop*/ ctx[15] + "px)");
 			}
@@ -4009,6 +3997,18 @@ function create_fragment$8(ctx) {
 
 			if (dirty[0] & /*classes, disableTransition*/ 524304) {
 				toggle_class(div9, "sg-disable-transition", !/*disableTransition*/ ctx[19]);
+			}
+
+			if (dirty[0] & /*visibleRows*/ 131072) {
+				const each_value_3 = /*visibleRows*/ ctx[17];
+
+				updateVisibleRowsYPosision(each_value_3);
+				StelteGanttScopeHolder.displayedTaskRows = each_value_3;
+				console.log('gantt_row_task', StelteGanttScopeHolder);
+
+				group_outros();
+				each_blocks_3 = update_keyed_each(each_blocks_3, dirty, get_key_1, 1, ctx, each_value_3, each2_lookup, div3, outro_and_destroy_block, create_each_block_3, null, get_each_context_3);
+				check_outros();
 			}
 		},
 		i(local) {
@@ -4113,7 +4113,6 @@ function create_fragment$8(ctx) {
 			mounted = false;
 			run_all(dispose);
 			StelteGanttScopeHolder.tableElement = {}
-			StelteGanttScopeHolder.virtualScroll.scrollBlock = null;
 		}
 	};
 }
@@ -4475,10 +4474,12 @@ function instance$8($$self, $$props, $$invalidate) {
 		};
 
 		node.addEventListener("scroll", onscroll);
+		StelteGanttScopeHolder.virtualScroll.scrollBlock = node;
 
 		return {
 			destroy() {
 				node.removeEventListener("scroll", onscroll, false);
+				StelteGanttScopeHolder.virtualScroll.scrollBlock = null;
 			}
 		};
 	}
@@ -6371,8 +6372,9 @@ function create_fragment$b(ctx) {
 		p(ctx, dirty) {
 			const entities = ctx[17].entities;
 			const ids = ctx[17].ids;
-			const data = ids.filter(id => !entities[id].hidden).map(id => entities[id]);
-			StelteGanttScopeHolder.taskRows = data;
+			const visibleIds = ids.filter(id => !entities[id].hidden);
+			StelteGanttScopeHolder.taskRows = visibleIds;
+			StelteGanttScopeHolder.taskRowsEntities = visibleIds.map(id => entities[id]);
 			if (dirty[0] & /*tableHeaders*/ 32) {
 				each_value_1 = /*tableHeaders*/ ctx[5];
 				let i;
@@ -6534,6 +6536,7 @@ function instance$b($$self, $$props, $$invalidate) {
 		node.addEventListener("scroll", event => {
 			$$invalidate(6, headerContainer.scrollLeft = node.scrollLeft, headerContainer);
 		});
+		console.log('gantt_scrollNode2', node);
 
 		return {
 			destroy() {
@@ -6562,7 +6565,6 @@ function instance$b($$self, $$props, $$invalidate) {
 	}
 
 	async function updateYPositions(row) {
-		
 		const { height, children } = row;
 		const { displayedTaskRows } = StelteGanttScopeHolder;
 
@@ -6582,7 +6584,17 @@ function instance$b($$self, $$props, $$invalidate) {
 			}
 		});
 
-		StelteGanttScopeHolder.$taskStore = $taskStore;
+		setTimeout(() => {
+			let count = 0;
+			const entities = StelteGanttScopeHolder.taskRowsEntities;
+			if (entities.length) {
+				let { height, y } = entities[0];
+				entities.forEach(entity => {
+					entity.y = y;
+					y += height;
+				});
+			}
+		});
 		// $taskStore.ids.forEach(id => {
 		// 	const task = $taskStore.entities[id];
 		// 	const row = $rowStore.entities[task.model.resourceId];
@@ -7197,6 +7209,7 @@ var StelteGanttScopeHolder = {
 	displayedTasks: [],
 	displayedTaskRows: [],
 	taskRows: [],
+	taskRowsEntities: {},
 	tableElement: {},
 	onRowSelected$: new BehaviorSubject(null),
 	customGanttConfig: {
@@ -7207,7 +7220,7 @@ var StelteGanttScopeHolder = {
 		scrollBlock: null,
 		scrollToTaskRowId: function(taskRowId) {
 			const height = StelteGanttScopeHolder.customGanttConfig.virtualScroll.rowHeight;
-			const indexOfRow = StelteGanttScopeHolder.taskRows.findIndex(x => x.model.id === taskRowId);
+			const indexOfRow = StelteGanttScopeHolder.taskRows.findIndex(id => id === taskRowId);
 			const index = indexOfRow;
 			this.scrollBlock && this.scrollBlock.scrollTo(0, height* index);
 		},
@@ -7225,8 +7238,8 @@ StelteGanttScopeHolder.selectedRowEmitter$.subscribe(data => {
 
 	if (data.current) {
 
-		const selectedRowData = StelteGanttScopeHolder.taskRows.find(x => x.model.id === data.current.id);
-		if (selectedRowData) {
+		const selectedRowId = StelteGanttScopeHolder.taskRows.find(id => id === data.current.id);
+		if (selectedRowId) {
 			StelteGanttScopeHolder.virtualScroll.isScroll++;
 			if (StelteGanttScopeHolder.virtualScroll.isScroll > 1) {
 				StelteGanttScopeHolder.virtualScroll.isScroll = 0;
