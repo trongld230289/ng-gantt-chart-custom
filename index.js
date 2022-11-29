@@ -4004,7 +4004,6 @@ function create_fragment$8(ctx) {
 
 				updateVisibleRowsYPosision(each_value_3);
 				StelteGanttScopeHolder.displayedTaskRows = each_value_3;
-				console.log('gantt_row_task', StelteGanttScopeHolder);
 
 				group_outros();
 				each_blocks_3 = update_keyed_each(each_blocks_3, dirty, get_key_1, 1, ctx, each_value_3, each2_lookup, div3, outro_and_destroy_block, create_each_block_3, null, get_each_context_3);
@@ -6565,6 +6564,21 @@ function instance$b($$self, $$props, $$invalidate) {
 	}
 
 	async function updateYPositions(row) {
+
+		const indexOfRow = StelteGanttScopeHolder.taskRows.find(id => row.model.id === id)
+		const rowEntity = StelteGanttScopeHolder.taskRowsEntities.find(entity => entity.model.id === indexOfRow);
+		if (rowEntity) {
+			let y0 = rowEntity.y;
+			const height0 = rowEntity.height;
+			$taskStore.ids.filter((id) => {
+				const resourceId = $taskStore.entities[id].model.resourceId;
+				return resourceId.includes(row.model.id) && row.model.id !== resourceId;
+			}).forEach((id) => {
+				y0 += height0;
+				$taskStore.entities[id].top = y0 + $rowPadding;
+				$taskStore.entities[id].width = $taskStore.entities[id].width === 0 ? 1 : $taskStore.entities[id].width;
+			});
+		}
 		const { height, children } = row;
 		const { displayedTaskRows } = StelteGanttScopeHolder;
 
@@ -6585,7 +6599,6 @@ function instance$b($$self, $$props, $$invalidate) {
 		});
 
 		setTimeout(() => {
-			let count = 0;
 			const entities = StelteGanttScopeHolder.taskRowsEntities;
 			if (entities.length) {
 				let { height, y } = entities[0];
