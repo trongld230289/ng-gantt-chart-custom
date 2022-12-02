@@ -5419,7 +5419,7 @@ function create_fragment$9(ctx) {
 			insert(target, div, anchor);
 			if (if_block) if_block.m(div, null);
 			append(div, t);
-			if (ctx[0].childLevel === 0) {
+			if (ctx[0].childLevel === 0 && ctx[0].model.customRowHeaderHtmlNode) {
 				div.lastElementChild.after(ctx[0].model.customRowHeaderHtmlNode);
 			}
 			if (default_slot) {
@@ -5433,7 +5433,7 @@ function create_fragment$9(ctx) {
 			if (/*row*/ ctx[0].children) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
-					if (div.lastElementChild) {
+					if (div.lastElementChild && ctx[0].model.customRowHeaderHtmlNode) {
 						if (!!div.firstElementChild.nextElementSibling) {
 							div.firstElementChild.nextElementSibling.remove();
 						}
@@ -5445,7 +5445,7 @@ function create_fragment$9(ctx) {
 					if_block = create_if_block$2(ctx);
 					if_block.c();
 					if_block.m(div, t);
-					if (ctx[0].childLevel === 0) {
+					if (ctx[0].childLevel === 0 && ctx[0].model.customRowHeaderHtmlNode) {
 						if (!!div.firstElementChild.nextElementSibling) {
 							div.firstElementChild.nextElementSibling.remove();
 						}
@@ -7263,6 +7263,7 @@ var StelteGanttScopeHolder = {
 	selectedRowEmitter$: new BehaviorSubject(null),
 		
 };
+let preventSettimeout = false;
 StelteGanttScopeHolder.selectedRowEmitter$.subscribe(data => {
 	if (StelteGanttScopeHolder.virtualScroll.isExpandedClicked > 0) {
 		StelteGanttScopeHolder.virtualScroll.isExpandedClicked--;
@@ -7281,9 +7282,13 @@ StelteGanttScopeHolder.selectedRowEmitter$.subscribe(data => {
 			const expand = (div) => { !!div && div.firstChild.click(); }
 			StelteGanttScopeHolder.virtualScroll.scrollToTaskRowId(data.current.id);
 
-			setTimeout(() => {
-				expand(document.querySelector(`[data-row-id="${data.current.id}"]`));
-			}, 200);
+			if (!preventSettimeout) {
+				preventSettimeout = true;
+				setTimeout(() => {
+					expand(document.querySelector(`[data-row-id="${data.current.id}"]`));
+					preventSettimeout = false;
+				}, 200);
+			}
 		}
 	}
 })
