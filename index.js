@@ -5419,7 +5419,9 @@ function create_fragment$9(ctx) {
 			insert(target, div, anchor);
 			if (if_block) if_block.m(div, null);
 			append(div, t);
-
+			if (ctx[0].childLevel === 0) {
+				div.lastElementChild.after(ctx[0].model.customRowHeaderHtmlNode);
+			}
 			if (default_slot) {
 				default_slot.m(div, null);
 			}
@@ -5431,14 +5433,33 @@ function create_fragment$9(ctx) {
 			if (/*row*/ ctx[0].children) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
+					if (div.lastElementChild) {
+						if (!!div.firstElementChild.nextElementSibling) {
+							div.firstElementChild.nextElementSibling.remove();
+						}
+						if (!!!div.firstElementChild.nextElementSibling) {
+							div.lastElementChild.after(ctx[0].model.customRowHeaderHtmlNode);
+						}
+					}
 				} else {
 					if_block = create_if_block$2(ctx);
 					if_block.c();
 					if_block.m(div, t);
+					if (ctx[0].childLevel === 0) {
+						if (!!div.firstElementChild.nextElementSibling) {
+							div.firstElementChild.nextElementSibling.remove();
+						}
+						if (!!!div.firstElementChild.nextElementSibling) {
+							div.lastElementChild.after(ctx[0].model.customRowHeaderHtmlNode);
+						}
+					}
 				}
 			} else if (if_block) {
 				if_block.d(1);
 				if_block = null;
+				if(div.lastElementChild) {
+					div.lastElementChild.remove();
+				}
 			}
 
 			if (default_slot) {
@@ -6535,7 +6556,6 @@ function instance$b($$self, $$props, $$invalidate) {
 		node.addEventListener("scroll", event => {
 			$$invalidate(6, headerContainer.scrollLeft = node.scrollLeft, headerContainer);
 		});
-		console.log('gantt_scrollNode2', node);
 
 		return {
 			destroy() {
