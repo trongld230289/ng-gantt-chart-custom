@@ -2866,6 +2866,7 @@ function create_fragment$7(ctx) {
 	let div;
 	let mounted;
 	let dispose;
+	const { max, min } = StelteGanttScopeHolder.customGanttConfig.horizonDragger;
 
 	return {
 		c() {
@@ -2883,7 +2884,13 @@ function create_fragment$7(ctx) {
 		},
 		p(ctx, [dirty]) {
 			if (dirty & /*x*/ 1) {
-				set_style(div, "left", /*x*/ ctx[0] + "px");
+				let left = ctx[0];
+				if (left > max) {
+					left = max;
+				} else if (left < min) {
+					left = min;
+				}
+				set_style(div, "left", /*x*/ left + "px");
 			}
 		},
 		i: noop,
@@ -6466,7 +6473,14 @@ function create_fragment$b(ctx) {
 			}
 
 			if (!current || dirty[0] & /*tableWidth*/ 1) {
-				set_style(div4, "width", /*tableWidth*/ ctx[0] + "px");
+				const { max, min } = StelteGanttScopeHolder.customGanttConfig.horizonDragger;
+				let left = ctx[0];
+				if (left > max) {
+					left = max;
+				} else if (left < min) {
+					left = min;
+				}
+				set_style(div4, "width", /*tableWidth*/ left + "px");
 			}
 		},
 		i(local) {
@@ -7248,6 +7262,7 @@ var StelteGanttScopeHolder = {
 	customGanttConfig: {
 		selectedRowHeaderColor: 'transparent',
 		virtualScroll: { rowHeight: /* default */ 36 },
+		horizonDragger: { max: 700, min: 150 }
 	},
 	virtualScroll: {
 		scrollBlock: null,
