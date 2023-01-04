@@ -3801,6 +3801,7 @@ function create_fragment$8(ctx) {
 			toggle_class(div2, "right-scrollbar-visible", /*rightScrollbarVisible*/ ctx[13]);
 			set_style(div3, "transform", "translateY(" + /*paddingTop*/ ctx[15] + "px)");
 			attr(div4, "class", "sg-rows svelte-12fxs8g");
+			attr(div4, "id", "gantt-custom-sg-rows-svelte-12fxs8g");
 			set_style(div4, "height", /*rowContainerHeight*/ ctx[14] + "px");
 			attr(div5, "class", "sg-foreground svelte-12fxs8g");
 			attr(div6, "class", "content svelte-12fxs8g");
@@ -6075,6 +6076,15 @@ function create_fragment$a(ctx) {
 				each_blocks[i].m(div, null);
 			}
 
+			const currentDataRow = StelteGanttScopeHolder.onRowSelected$.value();
+			if (currentDataRow) {
+				if (ctx[1].model.id === currentDataRow.model.id) {
+					set_style(div, "background-color", StelteGanttScopeHolder.customGanttConfig.selectedRowHeaderColor);
+				} else {
+					set_style(div, "background-color", "transparent");
+				}
+			}
+
 			current = true;
 		},
 		p(ctx, [dirty]) {
@@ -7270,7 +7280,9 @@ var StelteGanttScopeHolder = {
 			const height = StelteGanttScopeHolder.customGanttConfig.virtualScroll.rowHeight;
 			const indexOfRow = StelteGanttScopeHolder.taskRows.findIndex(id => id === taskRowId);
 			const index = indexOfRow;
-			this.scrollBlock && this.scrollBlock.scrollTo(0, height* index);
+			if (this.scrollBlock) {
+				this.scrollBlock.scrollTop = height * index;
+			}
 		},
 		isScroll: 0,
 		isExpandedClicked: 0
@@ -7294,7 +7306,12 @@ StelteGanttScopeHolder.selectedRowEmitter$.subscribe(data => {
 				StelteGanttScopeHolder.virtualScroll.isScroll = 0;
 			}
 
-			const expand = (div) => { !!div && div.firstChild.click(); }
+			const expand = async (div) => {
+				if (div) {
+					await div.firstChild.click();
+					await document.getElementById('gantt-custom-sg-rows-svelte-12fxs8g').firstElementChild.firstElementChild.click();
+				}
+			}
 			StelteGanttScopeHolder.virtualScroll.scrollToTaskRowId(data.current.id);
 
 			if (!preventSettimeout) {
