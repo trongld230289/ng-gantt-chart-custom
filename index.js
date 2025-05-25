@@ -1,5 +1,4 @@
 import moment, { duration } from 'moment';
-import { of } from 'rxjs';
 
 function noop() { }
 function assign(tar, src) {
@@ -3066,6 +3065,7 @@ class RowFactory {
 		row.enableDragging = row.enableDragging === undefined ? true : row.enableDragging;
 		// height of row element
 		const height = row.height || this.rowHeight;
+		
 		return {
 			model: row,
 			y,
@@ -3079,6 +3079,7 @@ class RowFactory {
 		return ctx.result;
 	}
 	createChildRows(rowModels, ctx, parent = null, level = 0, parents = []) {
+		
 		const rowsAtLevel = [];
 		const allRows = [];
 		if (parent) {
@@ -4129,6 +4130,7 @@ function onModuleInit(module) {
 }
 
 function instance$8($$self, $$props, $$invalidate) {
+	
 	const omit_props_names = [
 		"rows", "tasks", "timeRanges", "rowPadding", "rowHeight", "from", "to", "minWidth", "fitWidth", "classes", "headers", "zoomLevels", "taskContent", "tableWidth", "resizeHandleWidth", "onTaskButtonClick", "magnetUnit", "magnetOffset", "columnUnit", "columnOffset", "ganttTableModules", "ganttBodyModules", "reflectOnParentRows", "reflectOnChildRows", "columnService", "api", "taskFactory", "rowFactory", "dndManager", "timeRangeFactory", "utils", "refreshTimeRanges", "refreshTasks", "getRowContainer", "selectTask", "unselectTasks", "scrollToRow", "scrollToTask", "updateTask", "updateTasks", "updateRow", "updateRows", "getRow", "getTask", "getTasks", "deleteTask"
 	];
@@ -5509,6 +5511,7 @@ function instance$9($$self, $$props, $$invalidate) {
 	const dispatch = createEventDispatcher();
 
 	function onExpandToggle() {
+		
 		const data = {
 			model: row.model,
 		}
@@ -6283,7 +6286,7 @@ function create_each_block_1$1(ctx) {
 // (125:16) {#each visibleRows as row}
 function create_each_block$4(ctx) {
 	let current;
-
+	
 	const tablerow = new TableRow({
 		props: {
 			row: /*row*/ ctx[28],
@@ -6593,8 +6596,26 @@ function instance$b($$self, $$props, $$invalidate) {
 	function onRowExpanded(event) {
 		const row = event.detail.row;
 		row.expanded = true;
+		
+		if (
+			StelteGanttScopeHolder.prevSelectedRows.size > 0 && 
+			!StelteGanttScopeHolder.prevSelectedRows.has(row.model.id)
+		) {
+			const prevRow = StelteGanttScopeHolder.prevSelectedRows.values().next().value;
+			prevRow.expanded = false;
+			if (prevRow.children) hide(prevRow.children);
+		}
+		
+		StelteGanttScopeHolder.prevSelectedRows.clear();
+		StelteGanttScopeHolder.prevSelectedRows.set(row.model.id, row);
+
 		if (row.children) show(row.children);
 		updateYPositions(row);
+
+		// Re-scroll after expand and calc position
+		setTimeout(() => {
+			StelteGanttScopeHolder.virtualScroll.scrollToTaskRowId(row.model.id);
+		}, 50);
 	}
 
 	function onRowCollapsed(event, currentRow = null) {
@@ -6651,6 +6672,8 @@ function instance$b($$self, $$props, $$invalidate) {
 					y += height;
 				});
 			}
+			// StelteGanttScopeHolder.virtualScroll.scrollToTaskRowId(row.model.id);
+
 		});
 		// $taskStore.ids.forEach(id => {
 		// 	const task = $taskStore.entities[id];
@@ -7263,6 +7286,7 @@ function BehaviorSubject(data) {
 };
 
 var StelteGanttScopeHolder = {
+	prevSelectedRows: new Map(),
 	displayedTasks: [],
 	displayedTaskRows: [],
 	taskRows: [],
@@ -7276,20 +7300,24 @@ var StelteGanttScopeHolder = {
 	},
 	virtualScroll: {
 		scrollBlock: null,
+		scrollTop: 0,
 		scrollToTaskRowId: function(taskRowId) {
 			const height = StelteGanttScopeHolder.customGanttConfig.virtualScroll.rowHeight;
 			const indexOfRow = StelteGanttScopeHolder.taskRows.findIndex(id => id === taskRowId);
 			const index = indexOfRow;
+			const targetTop = index * height;
+
 			if (this.scrollBlock) {
-				this.scrollBlock.scrollTop = height * index;
+				this.scrollBlock.behavior = 'smooth';
+				this.scrollBlock.scrollTop = targetTop;
 			}
 		},
 		isScroll: 0,
 		isExpandedClicked: 0
 	},
 	selectedRowEmitter$: new BehaviorSubject(null),
-		
 };
+
 let preventSettimeout = false;
 StelteGanttScopeHolder.selectedRowEmitter$.subscribe(data => {
 	if (StelteGanttScopeHolder.virtualScroll.isExpandedClicked > 0) {
@@ -7312,6 +7340,7 @@ StelteGanttScopeHolder.selectedRowEmitter$.subscribe(data => {
 					await document.getElementById('gantt-custom-sg-rows-svelte-12fxs8g').firstElementChild.firstElementChild.click();
 				}
 			}
+			
 			StelteGanttScopeHolder.virtualScroll.scrollToTaskRowId(data.current.id);
 
 			if (!preventSettimeout) {
